@@ -1,19 +1,17 @@
 package org._ubb;
 
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
+import org._ubb.config.ConfigLoader;
+import org._ubb.config.NodeConfig;
+import org._ubb.model.Node;
+import org._ubb.view.CommandLineInterface;
+
 public class Main {
     public static void main(String[] args) {
-        // Press Opt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        ConfigLoader configLoader = new ConfigLoader();
+        NodeConfig config = configLoader.loadConfig();
+        Node node = new Node("localhost", config.getLocalNodePort()); // Adjust initialization as needed
 
-        // Press Ctrl+R or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
-
-            // Press Ctrl+D to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Cmd+F8.
-            System.out.println("i = " + i);
-        }
+        CommandLineInterface cli = new CommandLineInterface(node);
+        cli.start();
     }
 }
