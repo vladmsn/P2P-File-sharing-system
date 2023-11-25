@@ -28,19 +28,13 @@ public class Node {
 
     public int getBucketIndex(String nodeId) {
         BigInteger distance = calculateDistance(this.identifier, nodeId);
-        System.out.println("Distance: " + distance); // Debug print
-
         if (distance.equals(BigInteger.ZERO)) {
             return -1;
         }
 
         int highestBit = distance.bitLength() - 1;
-        System.out.println("Highest Bit: " + highestBit); // Debug print
 
-        int bucketIndex = 159 - highestBit;
-        System.out.println("Bucket Index: " + bucketIndex); // Debug print
-
-        return bucketIndex;
+        return 159 - highestBit;
     }
 
     private BigInteger calculateDistance(String nodeId1, String nodeId2) {
