@@ -1,16 +1,16 @@
 package org._ubb.view;
 
-import org._ubb.model.Node;
+import org._ubb.model.KademliaNode;
 
 import java.util.Scanner;
 
 public class CommandLineInterface {
 
-    private final Node node;
+    private final KademliaNode kademliaNode;
     private final Scanner scanner;
 
-    public CommandLineInterface(Node node) {
-        this.node = node;
+    public CommandLineInterface(KademliaNode kademliaNode) {
+        this.kademliaNode = kademliaNode;
         this.scanner = new Scanner(System.in);
     }
 

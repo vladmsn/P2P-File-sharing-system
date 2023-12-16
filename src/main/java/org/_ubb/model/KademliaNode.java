@@ -1,7 +1,6 @@
 package org._ubb.model;
 
 import lombok.Data;
-import lombok.Getter;
 import org._ubb.utils.EncryptionUtils;
 
 import java.math.BigInteger;
@@ -11,12 +10,12 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class Node {
+public class KademliaNode {
     private final String identifier;
     private final List<KBucket> routingTable;
     private final Map<String, String> dataStore;
 
-    public Node(String host, int port) {
+    public KademliaNode(String host, int port) {
         this.identifier = EncryptionUtils.generateNodeIdentifier(host, port);
         this.dataStore = new HashMap<>();
 
