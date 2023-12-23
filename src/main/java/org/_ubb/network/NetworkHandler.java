@@ -1,6 +1,9 @@
 package org._ubb.network;
 
-import org._ubb.network.messages.KademliaMessage;
+import ch.qos.logback.classic.net.SimpleSocketServer;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org._ubb.network.messages.TorrentMessage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +15,7 @@ import org.java_websocket.WebSocket;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -23,17 +27,21 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 
+@Slf4j
 public class NetworkHandler {
 
-    private static final int RESPONSE_TIMEOUT_SECONDS = 10;
+    protected static final int RESPONSE_TIMEOUT_SECONDS = 10;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-
+    @Getter
     private WebSocketServer server;
+    @Getter
+    private Consumer<TorrentMessage> onMessageReceived;
+    @Getter
     private Map<WebSocket, String> nodeAddressMap = new ConcurrentHashMap<>();
-    private final Map<String, CompletableFuture<KademliaMessage>> pendingRequests = new ConcurrentHashMap<>();
+    @Getter
+    private final Map<String, CompletableFuture<TorrentMessage>> pendingRequests = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private Consumer<KademliaMessage> onMessageReceived;
 
     public NetworkHandler(int port) {
         startServer(port);
@@ -43,25 +51,23 @@ public class NetworkHandler {
         server = new WebSocketServer(new InetSocketAddress(port)) {
             @Override
             public void onOpen(WebSocket conn, ClientHandshake handshake) {
-                System.out.println("New connection from " + conn.getRemoteSocketAddress());
-                // Extract node information from handshake or initial message
-                // For simplicity, let's assume the remote socket address is the node address
-                nodeAddressMap.put(conn, conn.getRemoteSocketAddress().toString());            }
+                log.info("New connection to " + conn.getRemoteSocketAddress());
+                nodeAddressMap.put(conn, conn.getRemoteSocketAddress().toString());
+            }
 
             @Override
             public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-                System.out.println("Closed connection to " + conn.getRemoteSocketAddress());
+                log.info("Connection closed to " + conn.getRemoteSocketAddress() + " with code " + code + " and reason " + reason);
             }
 
             @Override
             public void onMessage(WebSocket conn, String message) {
-                System.out.println("Message from " + conn.getRemoteSocketAddress() + ": " + message);
-                // Handle the message
                 String nodeAddress = nodeAddressMap.get(conn);
+                log.info("Message from " + nodeAddress + ": " + message);
 
                 try {
-                    KademliaMessage receivedMessage = objectMapper.readValue(message, KademliaMessage.class);
-                    CompletableFuture<KademliaMessage> future = pendingRequests.remove(receivedMessage.getId());
+                    TorrentMessage receivedMessage = objectMapper.readValue(message, TorrentMessage.class);
+                    CompletableFuture<TorrentMessage> future = pendingRequests.remove(receivedMessage.getId());
                     if (future != null) {
                         future.complete(receivedMessage);
                     }
@@ -70,32 +76,32 @@ public class NetworkHandler {
                         onMessageReceived.accept(receivedMessage);
                     }
                 } catch (JsonProcessingException e) {
-                    System.err.println("Error in deserializing message: " + e.getMessage());
+                    log.error("Error in deserializing message: " + e.getMessage());
                 }
             }
 
             @Override
             public void onError(WebSocket conn, Exception ex) {
-                System.out.println("Error: " + ex.getMessage());
+                log.error("Error in connection to server: " + ex.getMessage());
             }
 
             @Override
             public void onStart() {
-                System.out.println("Server started successfully");
+                log.info("Server started on port " + getPort());
             }
         };
         server.start();
     }
 
 
-    public void sendMessageToNode(KademliaMessage message, String targetNodeAddress) {
+    public void sendMessageToNode(TorrentMessage message, String targetNodeAddress) {
         WebSocket targetConnection = findOrCreateConnection(targetNodeAddress);
         if (targetConnection != null) {
             sendMessageWhenConnected(message, targetConnection);
         }
     }
 
-    private WebSocket findOrCreateConnection(String nodeAddress) {
+    protected WebSocket findOrCreateConnection(String nodeAddress) {
         Optional<WebSocket> existingConnection = nodeAddressMap.entrySet().stream()
                 .filter(entry -> nodeAddress.equals(entry.getValue()))
                 .map(Map.Entry::getKey)
@@ -106,47 +112,47 @@ public class NetworkHandler {
 
     private WebSocket connectToServer(String nodeAddress) {
         try {
-            // Assuming nodeAddress is in the format "host:port"
             URI serverUri = new URI("ws://" + nodeAddress);
             WebSocketClient newClient = new WebSocketClient(serverUri) {
                 @Override
                 public void onOpen(ServerHandshake handshake) {
-                    System.out.println("New connection opened to " + getURI());
+                    log.info("New connection to " + getURI());
+                    nodeAddressMap.put(this, nodeAddress);
                 }
 
                 @Override
                 public void onMessage(String message) {
-                    System.out.println("Received message: " + message);
+                    log.info("Message from " + getURI() + ": " + message);
                     try {
-                        KademliaMessage receivedMessage = objectMapper.readValue(message, KademliaMessage.class);
+                        TorrentMessage receivedMessage = objectMapper.readValue(message, TorrentMessage.class);
                         if (onMessageReceived != null) {
                             onMessageReceived.accept(receivedMessage);
                         }
                     } catch (JsonProcessingException e) {
-                        System.err.println("Error in deserializing message: " + e.getMessage());
+                        log.error("Error in deserializing message: " + e.getMessage());
                     }
                 }
 
                 @Override
                 public void onClose(int code, String reason, boolean remote) {
-                    System.out.println("Closed connection to " + getURI());
+                    log.info("Connection closed to " + getURI() + " with code " + code + " and reason " + reason);
                 }
 
                 @Override
                 public void onError(Exception ex) {
-                    System.err.println("Error on connection to " + getURI() + ": " + ex.getMessage());
+                    log.error("Error in connection to server: " + ex.getMessage());
                 }
             };
 
             newClient.connectBlocking(); // Wait for the connection to be established
             return newClient;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error in connecting to server: " + e.getMessage());
             return null; // or handle differently
         }
     }
 
-    private void sendMessageWhenConnected(KademliaMessage message, WebSocket conn) {
+    private void sendMessageWhenConnected(TorrentMessage message, WebSocket conn) {
         CompletableFuture.runAsync(() -> {
             while (!conn.isOpen()) {
                 try {
@@ -160,31 +166,26 @@ public class NetworkHandler {
                 String jsonMessage = objectMapper.writeValueAsString(message);
                 conn.send(jsonMessage);
 
-                CompletableFuture<KademliaMessage> future = new CompletableFuture<>();
+                CompletableFuture<TorrentMessage> future = new CompletableFuture<>();
                 pendingRequests.put(message.getId(), future);
 
                 scheduleTimeout(future, message.getId());
             } catch (JsonProcessingException e) {
-                System.err.println("Error in serializing message: " + e.getMessage());
+                log.error("Error in serializing message: " + e.getMessage());
             }
         });
     }
 
-    private void scheduleTimeout(CompletableFuture<KademliaMessage> future, String messageId) {
+    protected void scheduleTimeout(CompletableFuture<TorrentMessage> future, String messageId) {
         scheduler.schedule(() -> {
-            CompletableFuture<KademliaMessage> pendingFuture = pendingRequests.remove(messageId);
+            CompletableFuture<TorrentMessage> pendingFuture = pendingRequests.remove(messageId);
             if (pendingFuture != null && !pendingFuture.isDone()) {
                 pendingFuture.completeExceptionally(new TimeoutException("Response timed out"));
             }
         }, RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    public void setOnMessageReceived(Consumer<KademliaMessage> onMessageReceived) {
+    public void setOnMessageReceived(Consumer<TorrentMessage> onMessageReceived) {
         this.onMessageReceived = onMessageReceived;
     }
-
-    public CompletableFuture<KademliaMessage> getFutureForMessage(String messageId) {
-        return pendingRequests.get(messageId);
-    }
-
 }

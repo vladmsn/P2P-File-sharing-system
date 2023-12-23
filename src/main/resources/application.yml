@@ -1,3 +1,3 @@
 
 bootstrapNodeAddress: "192.168.1.2:8080"
-localNodePort: 8081
+localNodePort: 5050
