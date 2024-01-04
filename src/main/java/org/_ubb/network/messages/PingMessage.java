@@ -6,17 +6,16 @@ import lombok.Getter;
 
 @Getter
 @Builder
-@JsonTypeName("PING")
 public class PingMessage extends TorrentMessage {
-    private  String senderId;
+    private  String senderAddress;
 
     public PingMessage() {
         super("PING");
     }
 
-    public PingMessage(String senderId) {
+    public PingMessage(String senderAddress) {
         super("PING");
-        this.senderId = senderId;
+        this.senderAddress = senderAddress;
     }
 
 }

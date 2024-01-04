@@ -6,9 +6,8 @@ import lombok.Getter;
 
 @Getter
 @Builder
-@JsonTypeName("ACK")
 public class AckMessage extends TorrentMessage {
-    private String senderId;
+    private String senderAddress;
 
     public AckMessage() {
         super("ACK");
@@ -16,7 +15,7 @@ public class AckMessage extends TorrentMessage {
 
     public AckMessage(String senderId) {
         super("ACK");
-        this.senderId = senderId;
+        this.senderAddress = senderAddress;
     }
 
 }

@@ -6,7 +6,6 @@ import lombok.Getter;
 
 @Getter
 @Builder
-@JsonTypeName("FILE_REQUEST")
 public class FileRequestMessage extends TorrentMessage {
     private String fileIdentifier;
     private String senderAddress;

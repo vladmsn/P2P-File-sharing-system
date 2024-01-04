@@ -43,12 +43,12 @@ public class FileTransferService {
     }
 
     private void handlePingMessage(PingMessage message) {
-        AckMessage ack = new AckMessage(localNode.getIdentifier());
-        networkHandler.sendMessageToNode(ack, message.getSenderId());
+        AckMessage ack = new AckMessage(localNode.getAddress());
+        networkHandler.sendMessageToNode(ack, message.getSenderAddress());
     }
 
     private void handleAckMessage(AckMessage message) {
-        log.info("Acknowledgement received from " + message.getSenderId());
+        log.info("Acknowledgement received from " + message.getSenderAddress());
     }
 
     private void handleFileRequestMessage(FileRequestMessage message) {
@@ -83,5 +83,10 @@ public class FileTransferService {
     public void downloadFile(String fileId, String sourceNodeId) {
         FileRequestMessage requestMessage = new FileRequestMessage(fileId, localNode.getAddress());
         networkHandler.sendMessageToNode(requestMessage, sourceNodeId);
+    }
+
+    public void pingNode(String address) {
+        PingMessage pingMessage = new PingMessage(localNode.getAddress());
+        networkHandler.sendMessageToNode(pingMessage, address);
     }
 }

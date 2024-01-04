@@ -40,6 +40,11 @@ public class CommandLineInterface {
                 case "list":
                     listFiles();
                     break;
+                case "ping":
+                    System.out.println("Enter node address:");
+                    String address = scanner.nextLine();
+                    fileTransferService.pingNode(address);
+                    break;
                 case "exit":
                     running = false;
                     break;

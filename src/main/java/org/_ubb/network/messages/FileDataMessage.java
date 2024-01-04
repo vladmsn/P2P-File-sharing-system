@@ -6,7 +6,6 @@ import lombok.Getter;
 
 @Getter
 @Builder
-@JsonTypeName("FILE_DATA")
 public class FileDataMessage extends TorrentMessage {
     private String fileName;
     private String fileData;  // For simplicity, using String to represent file data
