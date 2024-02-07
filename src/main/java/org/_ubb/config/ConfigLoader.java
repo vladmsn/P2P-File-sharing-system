@@ -9,10 +9,20 @@ import java.io.InputStream;
 @Slf4j
 public class ConfigLoader {
 
-    public NodeConfig loadConfig() {
+    public NodeConfig loadNodeConfig() {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.yml")) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             return mapper.readValue(input, NodeConfig.class);
+        } catch (Exception e) {
+            log.error("An error occurred while reading configuration: ", e);
+            return null;
+        }
+    }
+
+    public TorrentClientConfig loadTorrentClientConfig() {
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.yml")) {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            return mapper.readValue(input, TorrentClientConfig.class);
         } catch (Exception e) {
             log.error("An error occurred while reading configuration: ", e);
             return null;

@@ -1,6 +1,5 @@
 package org._ubb.network.messages;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,16 +7,31 @@ import lombok.Getter;
 @Builder
 public class FileDataMessage extends TorrentMessage {
     private String fileName;
-    private String fileData;  // For simplicity, using String to represent file data
+    private String fileHash;
+    private byte[] data;
+    private int chunkIndex;
+    private int totalChunks;
+    private String md5Checksum;
+    private String senderAddress;
 
     public FileDataMessage() {
         super("FILE_DATA");
     }
 
-    public FileDataMessage(String fileName, String fileData) {
+    public FileDataMessage(String fileName) {
         super("FILE_DATA");
         this.fileName = fileName;
-        this.fileData = fileData;
+    }
+
+    public FileDataMessage(String fileName, String fileHash, byte[] data, int chunkIndex, int totalChunks, String checksum, String senderAddress) {
+        super("FILE_DATA");
+        this.fileName = fileName;
+        this.fileHash = fileHash;
+        this.data = data;
+        this.chunkIndex = chunkIndex;
+        this.totalChunks = totalChunks;
+        this.md5Checksum = checksum;
+        this.senderAddress = senderAddress;
     }
 }
 

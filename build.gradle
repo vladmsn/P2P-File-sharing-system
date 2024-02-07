@@ -1,12 +1,24 @@
 plugins {
     id 'java'
+    id 'application'
 }
 
 group = 'org._ubb'
 version = '1.0-SNAPSHOT'
 
+application {
+    mainClass = 'org._ubb.Main' // Specify the fully qualified name of your main class here
+}
+
+
 repositories {
     mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 dependencies {

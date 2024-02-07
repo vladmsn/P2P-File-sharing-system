@@ -8,16 +8,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Data
 public class ClientNode {
-    private final String identifier;
+
+    private UUID clientId;
     private final String host;
     private final int port;
     private final Map<String, String> dataStore;
 
     public ClientNode(String host, int port) {
-        this.identifier = EncryptionUtils.generateNodeIdentifier(host, port);
         this.host = host;
         this.port = port;
         this.dataStore = new HashMap<>();

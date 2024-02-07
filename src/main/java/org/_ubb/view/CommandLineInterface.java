@@ -1,9 +1,11 @@
 package org._ubb.view;
 
 import org._ubb.model.ClientNode;
+import org._ubb.model.TorrentFileDto;
 import org._ubb.service.FileTransferService;
 import org._ubb.utils.EncryptionUtils;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class CommandLineInterface {
@@ -65,7 +67,7 @@ public class CommandLineInterface {
     }
 
     private void connectToNetwork() {
-        // Implementation to connect to the network
+        this.fileTransferService.connectToNetwork();
     }
 
     private void uploadFile() {
@@ -74,6 +76,7 @@ public class CommandLineInterface {
         try {
             String identifier = EncryptionUtils.generateFileId(filepath);
             this.clientNode.addToDataStore(identifier, filepath);
+            this.fileTransferService.uploadFile(identifier, filepath);
             System.out.println("File uploaded successfully. File identifier: " + identifier);
         } catch (Exception e) {
             System.out.println("invalid file path");
@@ -83,14 +86,23 @@ public class CommandLineInterface {
     private void downloadFile() {
         System.out.println("Enter file identifier of the file you want to download:");
         String fileId = scanner.nextLine();
-        this.fileTransferService.downloadFile(fileId, "127.0.0.1:8080");
+        try {
+            this.fileTransferService.downloadFile(fileId);
+        } catch (Exception e) {
+            System.out.println("Failed to download file: " + e.getMessage());
+        }
     }
 
     private void listFiles() {
-        // For now the files that the current client has
-        System.out.println("Files available for download:");
-        for (String fileId : this.clientNode.getDataStore().keySet()) {
-            System.out.println(fileId);
+
+        try {
+            List<TorrentFileDto> files = this.fileTransferService.getFiles();
+
+            for (var file : files) {
+                System.out.println(file.toString());
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to fetch files: " + e.getMessage());
         }
     }
 
