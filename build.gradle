@@ -1,13 +1,14 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 group = 'org._ubb'
 version = '1.0-SNAPSHOT'
 
 application {
-    mainClass = 'org._ubb.Main' // Specify the fully qualified name of your main class here
+    mainClass = 'org._ubb.application.MainApp' // Specify the fully qualified name of your main class here
 }
 
 
@@ -20,7 +21,10 @@ java {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
-
+javafx {
+    version = "21.0.2"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
 dependencies {
     implementation 'org.java-websocket:Java-WebSocket:1.5.2'
 

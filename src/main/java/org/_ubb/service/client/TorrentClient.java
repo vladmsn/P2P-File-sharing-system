@@ -15,6 +15,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,7 +24,7 @@ public class TorrentClient {
     private final static String PEERS_API = "/api/v1/peers";
     private final static String PEERS_REGISTER_API = PEERS_API + "/register";
     private final static String FILES_API = "/api/v1/files";
-    private final static String FILES_PEERS_API = FILES_API +  "/{fileHash}/peers";
+    private final static String FILES_PEERS_API = FILES_API +  "/{fileHash}/getPeers";
 
     private final HttpClient httpClient;
     private final TorrentClientConfig torrentClientConfig;
@@ -57,7 +58,7 @@ public class TorrentClient {
         }
     }
 
-    public TorrentFileDto addFile(UUID peerIdentifier, String fileHash, String fileName, String fileType, int fileSize)
+    public void addFile(UUID peerIdentifier, String fileHash, String fileName, String fileType, int fileSize)
             throws IOException, InterruptedException {
         TorrentFileDto file = TorrentFileDto.builder()
                 .peerIdentifier(peerIdentifier)
@@ -75,9 +76,7 @@ public class TorrentClient {
 
         HttpResponse<String> response = sendRequestWithRetry(request);
 
-        if (response.statusCode() == 201) {
-            return TorrentFileDto.fromJson(response.body());
-        } else {
+        if (response.statusCode() != 201) {
             throw new RuntimeException("Failed to add file: " + response.body());
         }
     }
@@ -89,6 +88,7 @@ public class TorrentClient {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        log.info(response.body());
 
         if (response.statusCode() == 200) {
             ObjectMapper mapper = new ObjectMapper();
@@ -105,10 +105,10 @@ public class TorrentClient {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
+        log.info(response.body());
         if (response.statusCode() == 200) {
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(response.body(), new TypeReference<List<PeerDto>>(){});
+            return mapper.readValue(response.body(), new TypeReference<>(){});
         } else {
             throw new RuntimeException("Failed to fetch peers for file hash: " + fileHash + " - " + response.body());
         }

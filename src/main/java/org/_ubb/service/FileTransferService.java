@@ -188,7 +188,7 @@ public class FileTransferService {
         this.torrentClient.getPeers(fileId)
                 .stream()
                 .findFirst()
-                .ifPresentOrElse(peer -> networkHandler.sendMessageToNode(requestMessage, peer.getAddress()),
+                .ifPresentOrElse(peer -> networkHandler.sendMessageToNode(requestMessage, peer.getAddress()+":"+peer.getPort()),
                         () -> log.error("No peers found for file: " + fileId));
     }
 
@@ -206,7 +206,6 @@ public class FileTransferService {
         String fileType = Files.probeContentType(path);
         long fileSizeInBytes = Files.size(path);
         int fileSizeInMB = (int) (fileSizeInBytes / (1024 * 1024));
-
         this.torrentClient.addFile(localNode.getClientId(), identifier, new File(filepath).getName(), fileType, fileSizeInMB);
     }
 }

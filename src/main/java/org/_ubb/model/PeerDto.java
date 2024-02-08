@@ -1,13 +1,17 @@
 package org._ubb.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PeerDto {
     private String id;
     private String address;
